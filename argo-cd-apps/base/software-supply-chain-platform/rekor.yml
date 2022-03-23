@@ -1,8 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-of-apps-everything
-  namespace: openshift-gitops
+  name: rekor
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 
@@ -10,12 +9,17 @@ spec:
   project: default
 
   source:
-    path: argo-cd-apps/overlays/minimal
-    repoURL: https://github.com/ploigos/openshift-pipelines-quickstart.git
-    targetRevision: main
+    chart: rekor
+    repoURL: https://sigstore.github.io/helm-charts
+    targetRevision: 0.2.12
+    helm:
+      values: |
+        server:
+          ingress:
+            enabled: false
 
   destination:
-    namespace: openshift-gitops
+    namespace: sigstore
     server: https://kubernetes.default.svc
 
   syncPolicy:
@@ -26,3 +30,8 @@ spec:
 
     syncOptions:
       - CreateNamespace=true
+
+    retry:
+      limit: 5
+      backoff:
+        duration: 15s
